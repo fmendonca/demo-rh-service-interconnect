@@ -1,0 +1,57 @@
+---
+- name: Deploy demo
+  hosts: localhost
+  connection: local
+  vars:
+    resource_group: nome_do_resource_group
+    location: eastus 
+    vnet_name: nome_da_vnet
+    subnet_name: nome_da_subnet
+    vm_name: nome_da_vm
+
+  tasks:
+  - name: deploy resource group on subscription_id "{{ subscription_id }}"
+    azure_rm_resourcegroup:
+      name: "{{ resource_group }}"
+      location: "{{ location }}"
+
+  - name: Criar virtual network
+    azure_rm_virtualnetwork:
+      resource_group: "{{ resource_group }}"
+      name: "{{ vnet_name }}"
+      address_prefixes: "10.0.0.0/16"
+
+  - name: Criar subnet
+    azure_rm_subnet:
+      resource_group: "{{ resource_group }}"
+      name: "{{ subnet_name }}"
+      address_prefix: "10.0.1.0/24"
+      virtual_network: "{{ vnet_name }}"
+
+  - name: Criar máquina virtual
+    azure_rm_virtualmachine:
+      resource_group: "{{ resource_group }}"
+      name: "{{ vm_name }}"
+      vm_size: Standard_D4_v3
+      admin_username: seu_usuario
+      admin_password: sua_senha
+      network_interfaces: nome_da_nic
+      image:
+        offer: RHEL
+        publisher: RedHat
+        sku: '9.2'
+        version: latest
+
+  - name: Adicionar host ao inventory
+    add_host:
+      name: "{{ vm_name }}"
+      groups: azure_vms
+
+- name: Instalar skupper na máquina virtual
+  hosts: azure_vms
+  become: yes
+  tasks:
+  - name: Instalar skupper
+    # As etapas exatas para a instalação do skupper podem variar. 
+    # Adapte de acordo com a documentação oficial ou o método de instalação desejado.
+    command: seu_comando_para_instalar_skupper
